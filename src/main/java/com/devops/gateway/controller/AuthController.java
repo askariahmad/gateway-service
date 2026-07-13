@@ -31,7 +31,7 @@ public class AuthController {
         return userRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
             .filter(user -> passwordEncoder.matches(request.getPassword(), user.getPassword()))
             .map(user -> {
-                String token = jwtUtil.generateToken(user.getUsername(), user.getTenantId());
+                String token = jwtUtil.generateToken(user.getUsername(), user.getTenantId(), user.getRole());
                 return ResponseEntity.ok(new AuthResponse(token));
             })
             .defaultIfEmpty(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
@@ -52,7 +52,7 @@ public class AuthController {
                 newUser.setRole("USER");
                 
                 return userRepository.save(newUser).map(savedUser -> {
-                    String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getTenantId());
+                    String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getTenantId(), savedUser.getRole());
                     return ResponseEntity.ok(new AuthResponse(token));
                 });
             }));
@@ -60,19 +60,31 @@ public class AuthController {
 
     @PostMapping("/entra-login")
     public Mono<ResponseEntity<AuthResponse>> entraLogin(@RequestBody EntraAuthRequest request) {
-        // In a real production scenario, this endpoint would validate the MSAL token against Azure AD.
-        // For development, we extract the username (email) and provision/fetch the tenant.
-        
         String email = request.getUsername();
         if (email == null || email.isEmpty()) {
              return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
         }
         
-        // Mock lookup: assume their tenant is derived from their email domain, e.g. company.com
         String tenantId = extractDomain(email) + "-tenant";
+        String role = "ROLE_DEVELOPER_VIEWER"; // default
         
-        // We could look them up in DB, or just issue the token if we trust the entra token
-        String token = jwtUtil.generateToken(email, tenantId);
+        email = email.toLowerCase();
+        
+        // Custom mocked users for Dev profile
+        if (email.startsWith("sysadmin")) {
+            role = "ROLE_SYSTEM_ADMIN";
+        } else if (email.startsWith("tenantadmin")) {
+            role = "ROLE_TENANT_ADMIN";
+        } else if (email.startsWith("security")) {
+            role = "ROLE_SECURITY_ENGINEER";
+        } else if (email.startsWith("dev")) {
+            role = "ROLE_DEVELOPER_VIEWER";
+        } else if (email.equals("realuser@devops.com")) {
+            role = "ROLE_SYSTEM_ADMIN";
+            tenantId = "real-tenant";
+        }
+        
+        String token = jwtUtil.generateToken(email, tenantId, role);
         return Mono.just(ResponseEntity.ok(new AuthResponse(token)));
     }
     

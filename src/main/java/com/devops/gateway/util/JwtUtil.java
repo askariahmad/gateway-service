@@ -24,10 +24,11 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String username, String tenantId) {
+    public String generateToken(String username, String tenantId, String role) {
         return Jwts.builder()
                 .subject(username)
                 .claim("tenantId", tenantId)
+                .claim("role", role)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())

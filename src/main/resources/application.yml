@@ -22,27 +22,27 @@ spring:
             allowedHeaders: "*"
       routes:
         - id: config-service
-          uri: http://localhost:8082
+          uri: ${CONFIG_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/v1/config/**
         - id: log-collector-service
-          uri: http://localhost:8083
+          uri: ${COLLECTOR_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/v1/collector/**
         - id: log-analyzer-service
-          uri: http://localhost:8081
+          uri: ${ANALYZER_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/v1/analyzer/**
         - id: repo-scanner-service
-          uri: http://localhost:8085
+          uri: ${SCANNER_SERVICE_URL:http://localhost:8085}
           predicates:
             - Path=/api/v1/scanner/**
         - id: incident-service
-          uri: http://localhost:8084
+          uri: ${INCIDENT_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/v1/incidents/**
         - id: notification-service
-          uri: http://localhost:8086
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8086}
           predicates:
             - Path=/api/v1/notifications/**
 
@@ -54,3 +54,4 @@ logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.security: DEBUG
+

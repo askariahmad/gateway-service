@@ -18,35 +18,30 @@ public class DataSeeder {
     @Bean
     public CommandLineRunner seedDatabase(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
-            userRepository.count().subscribe(count -> {
-                if (count == 0) {
-                    logger.info("Seeding test users into the database...");
-                    
-                    User admin = new User();
-                    admin.setUsername("admin");
-                    admin.setPassword(passwordEncoder.encode("admin123"));
-                    admin.setTenantId("tenant-a");
-                    admin.setRole("ADMIN");
-
-                    User user1 = new User();
-                    user1.setUsername("user1");
-                    user1.setPassword(passwordEncoder.encode("password"));
-                    user1.setTenantId("tenant-b");
-                    user1.setRole("USER");
-
-                    User user2 = new User();
-                    user2.setUsername("user2");
-                    user2.setPassword(passwordEncoder.encode("password"));
-                    user2.setTenantId("tenant-c");
-                    user2.setRole("USER");
-
-                    userRepository.saveAll(Flux.just(admin, user1, user2)).subscribe(
-                        user -> logger.info("Seeded user: " + user.getUsername())
-                    );
-                } else {
-                    logger.info("Users already exist, skipping seeding.");
-                }
-            });
+            userRepository.deleteAll().thenMany(
+                Flux.just(
+                    createUser("sysadmin@devops.com", "devops-com-tenant", "ROLE_SYSTEM_ADMIN", passwordEncoder),
+                    createUser("tenantadmin@devops.com", "devops-com-tenant", "ROLE_TENANT_ADMIN", passwordEncoder),
+                    createUser("security@devops.com", "devops-com-tenant", "ROLE_SECURITY_ENGINEER", passwordEncoder),
+                    createUser("dev@devops.com", "devops-com-tenant", "ROLE_DEVELOPER_VIEWER", passwordEncoder),
+                    createUser("realuser@devops.com", "real-tenant", "ROLE_SYSTEM_ADMIN", passwordEncoder)
+                )
+                .flatMap(userRepository::save)
+            ).subscribe(
+                user -> logger.info("Seeded user: " + user.getUsername()),
+                err -> logger.error("Error seeding users", err),
+                () -> logger.info("Test users successfully seeded into database!")
+            );
         };
+    }
+
+    private User createUser(String email, String tenantId, String role, PasswordEncoder passwordEncoder) {
+        User u = new User();
+        u.setUsername(email);
+        u.setEmail(email);
+        u.setPassword(passwordEncoder.encode("password123"));
+        u.setTenantId(tenantId);
+        u.setRole(role);
+        return u;
     }
 }

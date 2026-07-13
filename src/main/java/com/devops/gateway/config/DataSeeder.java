@@ -34,7 +34,13 @@ public class DataSeeder {
                     user1.setTenantId("tenant-b");
                     user1.setRole("USER");
 
-                    userRepository.saveAll(Flux.just(admin, user1)).subscribe(
+                    User user2 = new User();
+                    user2.setUsername("user2");
+                    user2.setPassword(passwordEncoder.encode("password"));
+                    user2.setTenantId("tenant-c");
+                    user2.setRole("USER");
+
+                    userRepository.saveAll(Flux.just(admin, user1, user2)).subscribe(
                         user -> logger.info("Seeded user: " + user.getUsername())
                     );
                 } else {

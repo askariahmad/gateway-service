@@ -26,6 +26,14 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @org.springframework.web.bind.annotation.GetMapping("/config")
+    public Mono<ResponseEntity<java.util.Map<String, String>>> getConfig() {
+        java.util.Map<String, String> config = new java.util.HashMap<>();
+        config.put("clientId", System.getenv().getOrDefault("AZURE_CLIENT_ID", "YOUR_CLIENT_ID"));
+        config.put("tenantId", System.getenv().getOrDefault("AZURE_TENANT_ID", "YOUR_TENANT_ID"));
+        return Mono.just(ResponseEntity.ok(config));
+    }
+
     @PostMapping("/login")
     public Mono<ResponseEntity<AuthResponse>> login(@RequestBody AuthRequest request) {
         return userRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
